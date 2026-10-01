@@ -1,0 +1,111 @@
+---
+title: "01_wiz"
+author: "Julian Morales"
+date: "2026-10-01"
+output: html_document
+---
+```{r}
+library(tidyverse)
+library(ggridges)
+
+library(p8105.datasets)
+data("weather_df")
+```
+
+Now we have everything we need
+
+```{r}
+weather_df
+```
+
+Let's make a scatterplot
+```{r}
+ggplot(weather_df, aes(x=tmin, y= tmax))+
+  geom_point()
+```
+
+Preferred to alwasy do the dataframe first
+
+```{r}
+weather_df |> 
+  ggplot(aes(x=tmin, y=tmax))+
+  geom_point()
+```
+
+Or make it a separate entitiy for saving
+
+```{r}
+ggp_temp_scatterplot = 
+  weather_df |> 
+  ggplot(aes(x=tmin, y=tmax))+
+  geom_point()
+
+ggp_temp_scatterplot
+```
+
+Make it fancier...
+```{r}
+weather_df |> 
+  ggplot(aes(x=tmin, y=tmax, color = name))+ #Aesthetic mappings: color by variable name
+  geom_point(alpha = .25)+ #alpha makes points a bit transparent
+  geom_smooth(se = FALSE) #If you want to see a trend clearly
+```
+
+Aesthetics are up to you
+
+```{r}
+weather_df |> 
+  ggplot(aes(x=tmin, y=tmax))+
+  geom_point(aes(color = name), alpha = .25)+ #you can define aesthetics wherever you need it
+  geom_smooth(se = FALSE)
+```
+
+No need to HAVE to HAVE a scatterplot
+
+```{r}
+# Just gives smooth line not a scatterplot
+weather_df |> 
+  ggplot(aes(x=tmin, y=tmax))+
+  geom_smooth(se = FALSE)
+```
+
+Show faceting
+```{r}
+weather_df |> 
+  ggplot(aes(x=tmin, y=tmax, color = name))+
+  geom_point(alpha = .5)+
+  facet_grid(.~name) #Separates scatterplot by name 
+```
+what is done now
+```{r}
+weather_df |> 
+  ggplot(aes(x=tmin, y=tmax, color = name))+
+  geom_point(alpha = .5)+
+  facet_grid(cols=vars(name)) #does same thing as above
+```
+
+
+Let's look at something else
+
+```{r}
+weather_df |> 
+  ggplot(aes(x=date, y=tmax, color = name))+
+  geom_point(aes(size = prcp), alpha = .5)+
+  geom_smooth(se =FALSE)+
+  facet_grid(.~name)
+```
+
+Make a plot of central park tmx v tmin only, and convert temperatures to fahrenheit.
+
+```{r}
+# This has not permanently changed the dataframe, just has done it within this call.
+weather_df |> 
+  filter(name =="CentralPark_NY") |> 
+  mutate(
+    tmax = tmax*(9/5) + 32,
+    tmin = tmin*(9/5) + 32
+  ) |> 
+  ggplot(aes(x=tmin, y=tmax))+
+  geom_point()
+```
+
