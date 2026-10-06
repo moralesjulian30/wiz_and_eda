@@ -1,0 +1,190 @@
+---
+title: "02_viz"
+author: "Julian Morales"
+date: "2026-10-06"
+output: github_document
+---
+```{r}
+library(tidyverse)
+library(ggridges)
+
+library(p8105.datasets)
+data("weather_df")
+```
+
+Colors!!!
+
+```{r}
+weather_df |> 
+  ggplot(aes(x=tmin, y=tmax, color = name))+
+  geom_point()
+  scale_color_hue(h = c(100, 100))
+```
+
+```{r}
+weather_df |> 
+  ggplot(aes(x=tmin, y=tmax, color = name))+
+  geom_point()+
+  viridis::scale_color_viridis(
+    name = "Location",
+    discrete = TRUE
+  )+
+  theme(legend.position = "bottom")
+```
+
+```{r}
+weather_df |> 
+  ggplot(aes(x=tmin, y=tmax, color = name))+
+  geom_point()+
+  viridis::scale_color_viridis(
+    name = "Location",
+    discrete = TRUE
+  )+
+  theme_classic()+
+  theme(legend.position = "bottom")
+```
+
+update tmax vs date plot
+
+```{r}
+weather_df |> 
+  ggplot(aes(x=date, y=tmax, color = name))+
+  geom_point()+
+  geom_smooth(se = FALSE)+
+  labs(
+    title = "Seasonal trends in Max Temp",
+    x = "date",
+    y = "Max temp",
+    caption = "Max daily temp in three weather stations in 2021 and 2020",
+    color = "Location"
+  )+
+  viridis::scale_color_viridis(
+    discrete = TRUE
+  )+
+  theme_minimal()+
+  theme(legend.position = "bottom")
+```
+
+## Two More Weird Things
+
+```{r}
+central_park_df = 
+  weather_df |> 
+  filter(name == "CentralPark_NY")
+
+molokai_df = 
+  weather_df |> 
+  filter(name == "Molokai_HI")
+
+ggplot(molokai_df, aes(x = date, y = tmax, color = name))+
+  geom_point()+
+  geom_line(data = central_park_df)
+```
+
+
+
+Multiple panels with different plot types stiched together by patchwork
+
+```{r}
+ggp_tmax_tmin = 
+  weather_df |> 
+  ggplot(aes(x = tmax, y = tmin, color = name))+
+  geom_point()
+
+ggp_prcp_density = 
+  weather_df |> 
+  filter(prcp > 0) |> 
+  ggplot(aes(x = prcp, fill = name))+
+  geom_density(alpha = .5)
+
+ggp_seasonal = 
+  weather_df |> 
+  ggplot(aes(x=date, y=tmax, color = name))+
+  geom_point()
+```
+
+we now have everything we need! 
+
+```{r}
+library(patchwork)
+
+ggp_tmax_tmin = 
+  weather_df |> 
+  ggplot(aes(x = tmax, y = tmin, color = name))+
+  geom_point()+
+  theme(legend.position = "none")
+
+ggp_prcp_density = 
+  weather_df |> 
+  filter(prcp > 0) |> 
+  ggplot(aes(x = prcp, fill = name))+
+  geom_density(alpha = .5)+
+  theme(legend.position = "none")
+
+ggp_seasonal = 
+  weather_df |> 
+  ggplot(aes(x=date, y=tmax, color = name))+
+  geom_point()+
+  theme(legend.position = "none")
+
+(ggp_tmax_tmin - ggp_prcp_density)/ggp_seasonal
+```
+
+## Data manipulation
+
+Start with factors
+
+box plots
+
+```{r}
+weather_df |>  
+  mutate(name = factor(name)) |> 
+  ggplot(aes(x = name, y = tmax))+
+  geom_boxplot()
+```
+
+```{r}
+weather_df |>  
+  mutate(name = fct_relevel(name, c("Molokai_HI", "CentralPark_NY", "Waterhole_WA"))) |> 
+  ggplot(aes(x = name, y = tmax))+
+  geom_boxplot()
+```
+
+```{r}
+weather_df |> 
+  mutate(name = fct_reorder(name, tmax)) |> 
+  ggplot(aes(x = name, y = tmax))+
+  geom_boxplot()
+```
+
+
+Make practice distribution plot
+
+rather than having tmax and tmin as separate columns, combine data through pivot longer to store if its max/min in one column and the actual temp values in another.
+```{r}
+weather_df |> 
+  select(name, tmax, tmin) |> 
+  pivot_longer(
+    tmax:tmin,
+    names_to = "observation",
+    values_to = "temp"
+  ) |> 
+  ggplot(aes(x = temp, fill = observation))+
+  geom_density(alpha = .5)+
+  facet_grid(.~name)
+```
+
+Another example
+
+```{r}
+pups_df = 
+  read_csv("data/FAS_pups.csv") |> 
+  janitor::clean_names()
+
+litter_df = 
+  read_csv("data/FAS_litter.csv") |> 
+  janitor::clean_names()
+
+##FINISH EXAMPLE
+```
+
